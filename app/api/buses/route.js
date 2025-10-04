@@ -4,18 +4,17 @@ import { db } from "@/lib/firebase";
 import { authenticate, requireRole } from "@/lib/auth";
 import { getISTTimestamp, validateRequiredFields } from "@/lib/utils";
 
-// GET - Get all buses
+// GET: Get all buses
 export async function GET(req) {
   try {
     const authHeader = req.headers.get('authorization');
     const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
-
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
     const busesSnapshot = await getDocs(
-      query(collection(db, "buses"), where("isActive", "==", true))
+      query(collection(db, "buses"))
     );
     
     const buses = busesSnapshot.docs.map(doc => ({
@@ -53,14 +52,14 @@ export async function POST(req) {
       return NextResponse.json({ message: validation.error }, { status: 422 });
     }
 
-    const { timestamp } = getISTTimestamp();
+    const { date, time } = getISTTimestamp();
 
     const busData = {
       ...data,
       isActive: data.isActive !== undefined ? data.isActive : true,
       currentStatus: data.currentStatus || 'ACTIVE',
-      createdAt: timestamp,
-      updatedAt: timestamp
+      createdDate: date,
+      createdTime: time
     };
 
     const docRef = await addDoc(collection(db, "buses"), busData);
