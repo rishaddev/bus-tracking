@@ -38,7 +38,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const roleCheck = requireRole(user, 'operator');
+    const roleCheck = requireRole(user, ['admin', 'operator']);
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: 403 });
     }
@@ -62,7 +62,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE: Delete bus (hard delete)
+// DELETE: Delete bus 
 export async function DELETE(req, { params }) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -71,7 +71,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const roleCheck = requireRole(user, 'operator');
+    const roleCheck = requireRole(user, ['admin', 'operator']);
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: 403 });
     }

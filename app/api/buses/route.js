@@ -40,7 +40,7 @@ export async function POST(req) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const roleCheck = requireRole(user, 'operator');
+    const roleCheck = requireRole(user, ['admin', 'operator']);
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: 403 });
     }
