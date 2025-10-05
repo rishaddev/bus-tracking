@@ -7,19 +7,17 @@ import { getISTTimestamp, validateRequiredFields } from "@/lib/utils";
 // GET: Get all operators
 export async function GET(req) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
+    const authHeader = req.headers.get("authorization");
+    const { user, error } = authenticate(authHeader?.replace("Bearer ", ""));
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const operatorsSnapshot = await getDocs(
-      query(collection(db, "operators"))
-    );
-    
-    const operators = operatorsSnapshot.docs.map(doc => ({
+    const operatorsSnapshot = await getDocs(query(collection(db, "operators")));
+
+    const operators = operatorsSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
 
     return NextResponse.json(operators, { status: 200 });
@@ -34,19 +32,32 @@ export async function GET(req) {
 // POST: Create new operator
 export async function POST(req) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
+    const authHeader = req.headers.get("authorization");
+    const { user, error } = authenticate(authHeader?.replace("Bearer ", ""));
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const roleCheck = requireRole(user, ['admin']);
+    const roleCheck = requireRole(user, ["admin"]);
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: 403 });
     }
 
     const data = await req.json();
-    const requiredFields = ['companyName', 'registrationNumber', 'contact'];
+    const {
+      companyName,
+      registrationNumber,
+      contact,
+      fleetSize,
+      activeBuses,
+      operatingProvinces,
+      licenseExpiry,
+      isActive,
+      rating,
+      totalTrips,
+    } = data;
+
+    const requiredFields = ["companyName", "registrationNumber", "contact"];
     const validation = validateRequiredFields(data, requiredFields);
     if (validation.error) {
       return NextResponse.json({ message: validation.error }, { status: 422 });
@@ -55,26 +66,31 @@ export async function POST(req) {
     const { date, time, timestamp } = getISTTimestamp();
 
     const operatorData = {
-      ...data,
+      companyName,
+      registrationNumber,
+      contact,
       fleetSize: data.fleetSize || 0,
       activeBuses: data.activeBuses || 0,
       operatingProvinces: data.operatingProvinces || [],
-      isActive: data.isActive !== undefined ? data.isActive : true,
+      licenseExpiry,
+      isActive,
       rating: data.rating || 0,
       totalTrips: data.totalTrips || 0,
+      isActive: data.isActive !== undefined ? data.isActive : true,
       createdDate: date,
       createdTime: time,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      joinedDate: data.joinedDate || date
+      joinedDate: data.joinedDate || date,
     };
 
     const docRef = await addDoc(collection(db, "operators"), operatorData);
 
-    return NextResponse.json({ 
-      message: "Operator created successfully!", 
-      operatorId: docRef.id 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: "Operator created successfully!",
+        operatorId: docRef.id,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     return NextResponse.json(
       { message: "Error creating operator", error: error.message },

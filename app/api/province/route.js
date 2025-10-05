@@ -7,19 +7,17 @@ import { getISTTimestamp, validateRequiredFields } from "@/lib/utils";
 // GET: Get all provinces
 export async function GET(req) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
+    const authHeader = req.headers.get("authorization");
+    const { user, error } = authenticate(authHeader?.replace("Bearer ", ""));
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const provincesSnapshot = await getDocs(
-      query(collection(db, "provinces"), where("isActive", "==", true))
-    );
-    
-    const provinces = provincesSnapshot.docs.map(doc => ({
+    const provincesSnapshot = await getDocs(query(collection(db, "provinces")));
+
+    const provinces = provincesSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
 
     return NextResponse.json(provinces, { status: 200 });
@@ -34,19 +32,22 @@ export async function GET(req) {
 // POST: Create new province
 export async function POST(req) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
+    const authHeader = req.headers.get("authorization");
+    const { user, error } = authenticate(authHeader?.replace("Bearer ", ""));
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const roleCheck = requireRole(user, ['admin']);
+    const roleCheck = requireRole(user, ["admin"]);
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: 403 });
     }
 
     const data = await req.json();
-    const requiredFields = ['name', 'capital', 'majorCities', 'busStations'];
+
+    const { name, capital, majorCities, busStations, provinceId } = data;
+
+    const requiredFields = ["name", "capital", "majorCities", "busStations"];
     const validation = validateRequiredFields(data, requiredFields);
     if (validation.error) {
       return NextResponse.json({ message: validation.error }, { status: 422 });
@@ -55,8 +56,12 @@ export async function POST(req) {
     const { date, time } = getISTTimestamp();
 
     const provinceData = {
-      ...data,
-      provinceId: data.provinceId || data.name.toLowerCase().replace(/\s+/g, '_'),
+      name,
+      capital,
+      majorCities,
+      busStations,
+      provinceId:
+        data.provinceId || data.name.toLowerCase().replace(/\s+/g, "_"),
       isActive: data.isActive !== undefined ? data.isActive : true,
       createdDate: date,
       createdTime: time,
@@ -64,10 +69,13 @@ export async function POST(req) {
 
     const docRef = await addDoc(collection(db, "provinces"), provinceData);
 
-    return NextResponse.json({ 
-      message: "Province created successfully!", 
-      provinceId: docRef.id 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: "Province created successfully!",
+        provinceId: docRef.id,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     return NextResponse.json(
       { message: "Error creating province", error: error.message },

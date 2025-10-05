@@ -7,19 +7,17 @@ import { getISTTimestamp, validateRequiredFields } from "@/lib/utils";
 // GET: Get all buses
 export async function GET(req) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
+    const authHeader = req.headers.get("authorization");
+    const { user, error } = authenticate(authHeader?.replace("Bearer ", ""));
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const busesSnapshot = await getDocs(
-      query(collection(db, "buses"))
-    );
-    
-    const buses = busesSnapshot.docs.map(doc => ({
+    const busesSnapshot = await getDocs(query(collection(db, "buses")));
+
+    const buses = busesSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }));
 
     return NextResponse.json(buses, { status: 200 });
@@ -34,19 +32,45 @@ export async function GET(req) {
 // POST: Create new bus
 export async function POST(req) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const { user, error } = authenticate(authHeader?.replace('Bearer ', ''));
+    const authHeader = req.headers.get("authorization");
+    const { user, error } = authenticate(authHeader?.replace("Bearer ", ""));
     if (error) {
       return NextResponse.json({ message: error }, { status: 401 });
     }
 
-    const roleCheck = requireRole(user, ['admin', 'operator']);
+    const roleCheck = requireRole(user, ["admin", "operator"]);
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: 403 });
     }
 
     const data = await req.json();
-    const requiredFields = ['licensePlate', 'busNumber', 'operatorId', 'capacity', 'model', 'year', 'color'];
+    const {
+      busNumber,
+      model,
+      isActive,
+      licensePlate,
+      routeId,
+      routeNo,
+      year,
+      lastMaintenance,
+      nextMaintenance,
+      operatorId,
+      operatorName,
+      facilities,
+      capacity,
+      currentStatus,
+      color,
+    } = data;
+
+    const requiredFields = [
+      "licensePlate",
+      "busNumber",
+      "operatorId",
+      "capacity",
+      "model",
+      "year",
+      "color",
+    ];
     const validation = validateRequiredFields(data, requiredFields);
     if (validation.error) {
       return NextResponse.json({ message: validation.error }, { status: 422 });
@@ -55,19 +79,36 @@ export async function POST(req) {
     const { date, time } = getISTTimestamp();
 
     const busData = {
-      ...data,
+      busNumber,
+      model,
+      isActive,
+      licensePlate,
+      routeId,
+      routeNo,
+      year,
+      lastMaintenance,
+      nextMaintenance,
+      operatorId,
+      operatorName,
+      facilities,
+      capacity,
+      currentStatus,
+      color,
       isActive: data.isActive !== undefined ? data.isActive : true,
-      currentStatus: data.currentStatus || 'ACTIVE',
+      currentStatus: data.currentStatus || "ACTIVE",
       createdDate: date,
-      createdTime: time
+      createdTime: time,
     };
 
     const docRef = await addDoc(collection(db, "buses"), busData);
 
-    return NextResponse.json({ 
-      message: "Bus created successfully!", 
-      busId: docRef.id 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: "Bus created successfully!",
+        busId: docRef.id,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     return NextResponse.json(
       { message: "Error creating bus", error: error.message },
