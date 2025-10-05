@@ -45,11 +45,12 @@ export async function PUT(req, { params }) {
 
     const { id } = await params;
     const data = await req.json();
-    const { timestamp } = getISTTimestamp();
+    const { date, time } = getISTTimestamp();
 
     await updateDoc(doc(db, "operators", id), {
       ...data,
-      updatedAt: timestamp
+      updatedDate: date,
+      updatedTime: time,
     });
 
     return NextResponse.json({ message: "Operator updated successfully!" }, { status: 200 });
