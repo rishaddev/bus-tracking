@@ -45,7 +45,6 @@ export async function POST(req) {
 
     const data = await req.json();
     const {
-      busNumber,
       model,
       isActive,
       licensePlate,
@@ -65,7 +64,6 @@ export async function POST(req) {
 
     const requiredFields = [
       "licensePlate",
-      "busNumber",
       "operatorId",
       "capacity",
       "model",
@@ -80,7 +78,6 @@ export async function POST(req) {
     const { date, time } = getISTTimestamp();
 
     const busData = {
-      busNumber,
       model,
       isActive,
       licensePlate,
