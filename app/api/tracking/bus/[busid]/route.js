@@ -40,7 +40,7 @@ export async function GET(req, { params }) {
 
     const trackingData = sortedData[0];
 
-    return NextResponse.json(allTrackingData, { status: 200 });
+    return NextResponse.json(trackingData, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { message: "Error fetching bus location", error: error.message },
