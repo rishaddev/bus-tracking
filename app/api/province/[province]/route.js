@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
-import { authenticate, requireAnyRole, requireRole } from "@/lib/auth";
+import { authenticate, requireRole } from "@/lib/auth";
 import { getISTTimestamp } from "@/lib/utils";
 
 // GET: Get province by Province
